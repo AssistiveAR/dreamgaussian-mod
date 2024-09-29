@@ -18,3 +18,13 @@ logs*
 videos*
 images*
 *.mp4
+
+# images
+*.png
+*.jpg
+
+# Ide
+.idea
+
+# OS
+.DS_Store
