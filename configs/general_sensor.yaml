@@ -14,7 +14,7 @@ ref_size: 256
 density_thresh: 1
 
 ### Output
-outdir: ../image-generation/general_3d
+outdir: ../src/general_3d
 mesh_format: obj
 save_path: ???
 
