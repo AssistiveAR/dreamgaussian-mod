@@ -77,7 +77,7 @@ class GUI:
 
         # override if provide a checkpoint
         if self.opt.load is not None:
-            self.renderer.initialize(self.opt.load)
+            self.renderer.initialize(self.opt.load)  # load previous model
         else:
             # initialize gaussians to a blob
             self.renderer.initialize(num_pts=self.opt.num_pts)
@@ -324,10 +324,25 @@ class GUI:
             # densify and prune
             if self.step >= self.opt.density_start_iter and self.step <= self.opt.density_end_iter:
                 viewspace_point_tensor, visibility_filter, radii = out["viewspace_points"], out["visibility_filter"], \
-                    out["radii"]
+                out["radii"]
+
+                # Ensure max_radii2D is initialized
+                if self.renderer.gaussians.max_radii2D.numel() == 0:
+                    self.renderer.gaussians.max_radii2D = torch.zeros_like(radii)
+
+                # Ensure compatibility of devices
+                device = self.renderer.gaussians.max_radii2D.device
+                visibility_filter = visibility_filter.to(device)
+                radii = radii.to(device)
+
+                # Check shape compatibility
+                assert self.renderer.gaussians.max_radii2D.shape[0] == visibility_filter.shape[0], \
+                    "Shape mismatch between max_radii2D and visibility_filter"
+
+                # Update max_radii2D
                 self.renderer.gaussians.max_radii2D[visibility_filter] = torch.max(
                     self.renderer.gaussians.max_radii2D[visibility_filter], radii[visibility_filter])
-                # TODO: fix the shape for max_radii2D
+
                 self.renderer.gaussians.add_densification_stats(viewspace_point_tensor, visibility_filter)
 
                 if self.step % self.opt.densification_interval == 0:
